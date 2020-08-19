@@ -5,12 +5,21 @@ inputs:
     required: true
     default: 'py38'
     description: Tox environment to run the tests on
+  packages:
+    required: false
+    default: ''
+    description: Fedora packages to install
 runs:
   using: docker
   image: docker://fedorapython/fedora-python-tox
-  entrypoint: tox
+  entrypoint: bash
   args:
-    - '-e${{ inputs.tox_env }}'
+    - '-euxc'
+    - |
+      if test -n "${{ inputs.packages }}"; then
+        dnf install -y --setopt=tsflags=nodocs --setopt=deltarpm=false --setopt=install_weak_deps=false ${{ inputs.packages }}; || exit 1;'
+      fi;
+      tox -e${{ inputs.tox_env }}
 branding:
   color: green
   icon: check
